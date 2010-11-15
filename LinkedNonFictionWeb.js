@@ -1,6 +1,26 @@
 $(document).ready(function() {
-  showTopConcepts();
+  populateLanguageChooser(); 
 });
+
+function populateLanguageChooser() {
+
+	var lang_url = 'proxy.php?lang2lexvo=1';
+
+	$.getJSON(lang_url, function(json, status) {
+		$.each(json, function(i) {
+			var item = json[i];
+			$('#lang_select').append('<option value="' + item.code + '">' + item.langname + '</option>');
+		});
+		// Remove the progress indicator
+		$('#initial_progress').remove();
+		// Show the language drop-down
+		$('#lang_form').show();
+		// Having showTopConcepts() here triggers the display of concepts after the language drop-down is displayed
+		// Whichever language is at the top of the drop-down will be displayed
+		showTopConcepts();
+	});
+	
+}
 
 function showTopConcepts() {
 
@@ -8,7 +28,7 @@ function showTopConcepts() {
 	$('#concepts').empty();
 	
 	// Show works
-			   var top_sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n';
+			 var top_sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n';
 	top_sparql = top_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> \n';
 	top_sparql = top_sparql + 'SELECT DISTINCT ?concept ?notation ?label WHERE { \n';
 	top_sparql = top_sparql + '?toplevel skos:hasTopConcept ?concept . \n';
