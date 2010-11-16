@@ -27,7 +27,7 @@ function showTopConcepts() {
 	// Clear the list of concepts
 	$('#concepts').empty();
 	
-	// Show works
+	// Show "top concepts"
 			 var top_sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n';
 	top_sparql = top_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> \n';
 	top_sparql = top_sparql + 'SELECT DISTINCT ?concept ?notation ?label WHERE { \n';
@@ -44,7 +44,12 @@ function showTopConcepts() {
 		if (json.results.bindings){
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
-				$('#concepts').append('<li class="topconcept">' + item.notation.value + ' ' + item.label.value + '</li>');
+				// For some reason a double set of concepts is returned for English, e.g.
+				// http://dewey.info/class/0/2009/08/about.en and http://dewey.info/class/000/2009/07/about.en
+				// Here we filter out the ones that contain a 3 digit dewey number, based on the length of the concept URI
+				if (item.concept.value.length == 42) {
+					$('#concepts').append('<li class="topconcept">' + item.notation.value + ' ' + item.label.value + '</li>');
+				}
 			});
 		} else {
 			alert('Something went wrong...');
