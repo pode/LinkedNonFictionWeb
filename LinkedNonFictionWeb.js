@@ -48,7 +48,7 @@ function showTopConcepts() {
 				// http://dewey.info/class/0/2009/08/about.en and http://dewey.info/class/000/2009/07/about.en
 				// Here we filter out the ones that contain a 3 digit dewey number, based on the length of the concept URI
 				if (item.concept.value.length == 42) {
-					$('#concepts1').append('<li class="concept1" onClick="showNarrower(\'' + item.concept.value + '\', \'concept2\');"><span class="notation">' + item.notation.value + '</span> ' + item.label.value + '</li>');
+					$('#concepts1').append('<li class="concept1" onClick="showNarrower(\'' + item.concept.value + '\', \'concept2\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span></li>');
 				}
 			});
 		} else {
@@ -84,9 +84,9 @@ function showNarrower(uri, level) {
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
 				if (level == 'concept2') {
-					$('#concepts2').append('<li class="concept2" onClick="showNarrower(\'' + item.narrower.value + '\', \'concept3\');"><span class="notation">' + item.notation.value + '</span> ' + item.label.value + '</li>');
+					$('#concepts2').append('<li class="concept2" onClick="showNarrower(\'' + item.narrower.value + '\', \'concept3\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span></li>');
 				} else {
-					$('#concepts3').append('<li class="concept3" onClick="showResults(\'' + item.narrower.value + '\');"><span class="notation">' + item.notation.value + '</span> ' + item.label.value + '</li>');	
+					$('#concepts3').append('<li class="concept3" onClick="showResults(\'' + item.narrower.value + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span></li>');	
 				}
 			});
 		} else {

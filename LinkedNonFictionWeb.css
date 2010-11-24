@@ -6,6 +6,10 @@ ul {
   list-style-type: none;	
 }
 
+.label {
+  cursor: pointer;	
+}
+
 .notation {
   color: silver;	
 }
