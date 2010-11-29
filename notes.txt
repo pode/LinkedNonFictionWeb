@@ -35,3 +35,55 @@ SELECT DISTINCT ?lang WHERE {
 ?concept dct:language ?lang .
 
 }
+
+# Count the number of names
+
+PREFIX pode: <http://www.bibpode.no/vocabulary#> 
+PREFIX dct: <http://purl.org/dc/terms/> 
+PREFIX foaf: <http://xmlns.com/foaf/0.1/> 
+SELECT DISTINCT ?record COUNT(?name) AS ?firstname ?title ?formatlabel ?issued ?langlabel WHERE { 
+?record dct:source pode:dfb_fagposter ; 
+pode:ddkThird <http://www.bibpode.no/instance/DDK_001> .
+OPTIONAL { ?record dct:title ?title . }
+OPTIONAL { 
+  ?record dct:format ?format . 
+  ?format rdfs:label ?formatlabel . 
+}
+OPTIONAL { ?record dct:issued ?issued . }
+OPTIONAL { 
+  ?record dct:language ?language .
+  ?language rdfs:label ?langlabel . 
+}
+OPTIONAL { 
+  ?record dct:creator ?creator . 
+  ?creator foaf:name ?name . 
+}
+FILTER langMatches( datatype(?langlabel), "xsd:stringno" ) 
+} GROUP BY ?record ORDER BY DESC(?issued) ?record LIMIT 25 
+
+# 
+
+PREFIX pode: <http://www.bibpode.no/vocabulary#> 
+PREFIX dct: <http://purl.org/dc/terms/> 
+PREFIX foaf: <http://xmlns.com/foaf/0.1/> 
+SELECT DISTINCT ?record ?name ?title ?formatlabel ?issued ?langlabel WHERE { 
+?record dct:source pode:dfb_fagposter ; 
+pode:ddkFirst <http://www.bibpode.no/instance/DDK_61> .
+OPTIONAL { ?record dct:title ?title . }
+OPTIONAL { ?record dct:issued ?issued . }
+OPTIONAL {
+  ?record dct:format ?format . 
+  ?format rdfs:label ?formatlabel .
+}
+OPTIONAL { 
+  ?record dct:language ?language ;
+  rdfs:label ?langlabel .
+} 
+OPTIONAL { 
+  ?record dct:creator ?creator ; 
+  foaf:name ?name . 
+} 
+ 
+FILTER langMatches( datatype(?langlabel), "xsd:stringno" )
+} 
+ORDER BY DESC(?issued) LIMIT 25 
