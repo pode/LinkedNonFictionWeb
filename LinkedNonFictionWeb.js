@@ -139,21 +139,27 @@ function showResults(uri, id) {
 	
 	// Get results
 				var search_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
-	search_sparql = search_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
-	search_sparql = search_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/> ';
-	search_sparql = search_sparql + 'SELECT DISTINCT ?post ?name ?title ?formatlabel ?issued ?langlabel WHERE { ';
-	search_sparql = search_sparql + '?post dct:source pode:dfb_fagposter ; ';
-	search_sparql = search_sparql + 'pode:ddkThird <http://www.bibpode.no/instance/DDK_' + class + '> ; ';
-	search_sparql = search_sparql + 'dct:title ?title ; ';
-	search_sparql = search_sparql + 'dct:format ?format ; ';
-	search_sparql = search_sparql + 'dct:issued ?issued ; ';
-	search_sparql = search_sparql + 'dct:language ?language ; ';
-	search_sparql = search_sparql + 'dct:creator ?creator . ';
-	search_sparql = search_sparql + '?creator foaf:name ?name . '; 
-	search_sparql = search_sparql + '?language rdfs:label ?langlabel . '; 
-	search_sparql = search_sparql + '?format rdfs:label ?formatlabel . '; 
-	search_sparql = search_sparql + 'FILTER langMatches( datatype(?langlabel), "xsd:stringno" ) ';
-	search_sparql = search_sparql + '} ORDER BY DESC(?issued) LIMIT 25 ';
+	search_sparql = search_sparql + 'PREFIX dct: <http://purl.org/dc/terms/>  ';
+	search_sparql = search_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>  ';
+	search_sparql = search_sparql + 'SELECT DISTINCT ?record ?name ?title ?formatlabel ?issued ?langlabel WHERE {  ';
+	search_sparql = search_sparql + '?record dct:source pode:dfb_fagposter ;  ';
+	search_sparql = search_sparql + 'pode:ddkThird <http://www.bibpode.no/instance/DDK_' + class + '> . ';
+	search_sparql = search_sparql + 'OPTIONAL { ?record dct:title ?title . } ';
+	search_sparql = search_sparql + 'OPTIONAL {  ';
+	search_sparql = search_sparql + '  ?record dct:format ?format .  ';
+	search_sparql = search_sparql + '  ?format rdfs:label ?formatlabel .  ';
+	search_sparql = search_sparql + '} ';
+	search_sparql = search_sparql + 'OPTIONAL { ?record dct:issued ?issued . } ';
+	search_sparql = search_sparql + 'OPTIONAL {  ';
+	search_sparql = search_sparql + '  ?record dct:language ?language . ';
+	search_sparql = search_sparql + '  ?language rdfs:label ?langlabel .  ';
+	search_sparql = search_sparql + '} ';
+	search_sparql = search_sparql + 'OPTIONAL {  ';
+	search_sparql = search_sparql + '  ?record dct:creator ?creator .  ';
+	search_sparql = search_sparql + '  ?creator foaf:name ?name .  ';
+	search_sparql = search_sparql + '} ';
+	search_sparql = search_sparql + 'FILTER langMatches( datatype(?langlabel), "xsd:stringno" )  ';
+	search_sparql = search_sparql + '} ORDER BY DESC(?issued) ?record LIMIT 25  ';
 	
 	var search_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(search_sparql) + '&output=json&jsonp=?';
 	var params = { 'output': 'json' };
@@ -167,7 +173,33 @@ function showResults(uri, id) {
 			var c = 1;
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
-				$('#searchresults').append('<tr class="resultrow"><td>' + c + '</td><td>' + item.name.value + '</td><td>' + item.title.value + '</td><td>' + item.formatlabel.value + '</td><td>' + item.issued.value + '</td><td>' + item.langlabel.value + '</td></tr>');
+				$('#searchresults').append('<tr class="resultrow" id="resultrow' + i  + '"></tr>');
+				$('#resultrow' + i).append('<td>' + c + '</td>');
+				if (item.name) {
+					$('#resultrow' + i).append('<td>' + item.name.value + '</td>');
+				} else {
+					$('#resultrow' + i).append('<td></td>');
+				} 
+				if (item.title) {
+					$('#resultrow' + i).append('<td>' + item.title.value + '</td>');
+				} else {
+					$('#resultrow' + i).append('<td></td>');
+				}
+				if (item.formatlabel) {
+					$('#resultrow' + i).append('<td>' + item.formatlabel.value + '</td>');
+				}else {
+					$('#resultrow' + i).append('<td></td>');
+				}
+				if (item.issued.value) {
+					$('#resultrow' + i).append('<td>' + item.issued.value + '</td>');
+				}else {
+					$('#resultrow' + i).append('<td></td>');
+				}
+				if (item.langlabel.value) {
+					$('#resultrow' + i).append('<td>' + item.langlabel.value + '</td>');
+				}else {
+					$('#resultrow' + i).append('<td></td>');
+				}
 				c = c + 1;
 			});
 			$('#searchresults').show();
