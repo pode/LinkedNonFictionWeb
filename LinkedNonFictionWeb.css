@@ -13,3 +13,11 @@ ul {
 .notation {
   color: silver;	
 }
+
+.waitingforcount {
+  display: none;	
+}
+
+.count {
+  display: inline;	
+}

@@ -28,6 +28,8 @@ function showTopConcepts() {
 	$('.concepts').empty();
 	// Clear search results
 	$('.resultrow').remove();
+	// Hide results table
+	$('#searchresults').hide();
 	
 	// Show "top concepts"
 			 var top_sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n';
@@ -50,10 +52,12 @@ function showTopConcepts() {
 				// http://dewey.info/class/0/2009/08/about.en and http://dewey.info/class/000/2009/07/about.en
 				// Here we filter out the ones that contain a 3 digit dewey number, based on the length of the concept URI
 				if (item.concept.value.length == 42) {
-					var id = notation2id(item.notation.value);
-					$('#concepts1').append('<li class="concept1" id="' + id + '" onClick="showNarrower(\'' + item.concept.value + '\', \'concept2\', \'' + id + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span></li>');
+					var concept = notation2concept(item.notation.value);
+					$('#concepts1').append('<li class="concept1" id="concept' + concept + '" onClick="showNarrower(\'' + item.concept.value + '\', \'concept2\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept.substring(0,1) + '">' + concept.substring(0,1) + '</span></li>');
 				}
 			});
+			// Get the counts for the concepts
+			get_counts();
 		} else {
 			alert('Something went wrong...');
 		}
@@ -75,6 +79,12 @@ function showNarrower(uri, level, id) {
 	}
 	$('#concepts3').empty();
 	
+	// Make sure no results are displayed
+	$('.resultrow').remove();
+	
+	// Hide the whole result-table
+	$('#searchresults').hide();
+	
 	// Highlight the chosen concept
 	$('#' + id + ' .label').css('background-color', 'silver');
 	
@@ -95,26 +105,19 @@ function showNarrower(uri, level, id) {
 		if (json.results.bindings){
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
-				var id = notation2id(item.notation.value);
+				var concept = notation2concept(item.notation.value);
 				if (level == 'concept2') {
-					$('#concepts2').append('<li id="' + id + '" class="concept2" onClick="showNarrower(\'' + item.narrower.value + '\', \'concept3\', \'' + id + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span></li>');
+					$('#concepts2').append('<li id="concept' + concept + '" class="concept2" onClick="showNarrower(\'' + item.narrower.value + '\', \'concept3\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept.substring(0,2) + '">' + concept.substring(0,2) + '</span></li>');
 				} else {
-					$('#concepts3').append('<li id="' + id + '" class="concept3" onClick="showResults(\'' + item.narrower.value + '\', \'' + id + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span></li>');	
+					$('#concepts3').append('<li id="concept' + concept + '" class="concept3" onClick="showResults(\'' + item.narrower.value + '\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept + '">' + concept + '</span></li>');
 				}
 			});
+			// Get the counts for concepts
+			get_counts();
 		} else {
 			alert('Something went wrong...');
 		}
 	});
-	
-}
-
-function notation2id(notation) {
-	
-	// This might be "503" or "[504]", so remove any brackets
-	notation = notation.replace("[", "");
-	notation = notation.replace("]", "");
-	return "concept" + notation;
 	
 }
 
@@ -160,7 +163,7 @@ function showResults(uri, id) {
 	$.getJSON(search_url, params, function(json, status) {
 		if (json.results.bindings){
 			// Make sure the results-table is displayed
-			// $('#searchresults').show();
+			$('#searchresults').show();
 			var c = 1;
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
@@ -172,6 +175,60 @@ function showResults(uri, id) {
 			alert('Something went wrong...');
 		}
 	});
+
+	
+}
+
+function notation2concept(notation) {
+	
+	// This might be "503" or "[504]", so remove any brackets
+	notation = notation.replace("[", "");
+	notation = notation.replace("]", "");
+	return notation;
+	
+}
+
+function get_counts() {
+	
+	$('.waitingforcount').each(function(index) {
+    	var c = $(this).text();
+    	var id = $(this).attr('id');
+    	
+    	// Determine which level we are looking for
+    	var level = 'Third';
+		if (c.length == 1) {
+			level = 'First';
+		}
+		if (c.length == 2) {
+			level = 'Second';
+		}
+		
+		// Note: COUNT() is part of what ARC calls SPARQL+, not a part of the official SPARQL standard
+		// http://arc.semsol.org/docs/v2/sparql+
+				   var count_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
+		count_sparql = count_sparql + 'SELECT COUNT(?record) AS ?count WHERE { ';
+		count_sparql = count_sparql + '?record pode:ddk' + level + ' <http://www.bibpode.no/instance/DDK_' + c + '> . }';
+		
+		var count_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(count_sparql) + '&output=json&jsonp=?';
+		var params = { 'output': 'json' };
+		
+		// $('#debug').append('<br /><br />' + search_url);
+	
+		$.getJSON(count_url, params, function(json, status) {
+			if (json.results.bindings[0].count.value){
+				$('#' + id).empty().append(' (' + json.results.bindings[0].count.value + ')');
+				// Make sure this concept is not counted again
+				$('#' + id).removeClass('waitingforcount');
+				// Give it the right class
+				$('#' + id).addClass('count');
+				// $('#debug').append(' ' + json.results.bindings[0].count.value);
+				// alert($(this).attr('id') + ' ' + json.results.bindings[0].count.value);
+			} else {
+				alert('Something went wrong...');
+			}
+		});
+		
+    });
 
 	
 }
