@@ -138,7 +138,7 @@ function showResults(uri, id) {
 				var search_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
 	search_sparql = search_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
 	search_sparql = search_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/> ';
-	search_sparql = search_sparql + 'SELECT DISTINCT ?post ?name ?title ?format ?issued ?langlabel WHERE { ';
+	search_sparql = search_sparql + 'SELECT DISTINCT ?post ?name ?title ?formatlabel ?issued ?langlabel WHERE { ';
 	search_sparql = search_sparql + '?post dct:source pode:dfb_fagposter ; ';
 	search_sparql = search_sparql + 'pode:ddkThird <http://www.bibpode.no/instance/DDK_' + class + '> ; ';
 	search_sparql = search_sparql + 'dct:title ?title ; ';
@@ -148,8 +148,9 @@ function showResults(uri, id) {
 	search_sparql = search_sparql + 'dct:creator ?creator . ';
 	search_sparql = search_sparql + '?creator foaf:name ?name . '; 
 	search_sparql = search_sparql + '?language rdfs:label ?langlabel . '; 
+	search_sparql = search_sparql + '?format rdfs:label ?formatlabel . '; 
 	search_sparql = search_sparql + 'FILTER langMatches( datatype(?langlabel), "xsd:stringno" ) ';
-	search_sparql = search_sparql + '} ORDER BY DESC(?issued) LIMIT 10 ';
+	search_sparql = search_sparql + '} ORDER BY DESC(?issued) LIMIT 25 ';
 	
 	var search_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(search_sparql) + '&output=json&jsonp=?';
 	var params = { 'output': 'json' };
@@ -163,7 +164,7 @@ function showResults(uri, id) {
 			var c = 1;
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
-				$('#searchresults').append('<tr class="resultrow"><td>' + c + '</td><td>' + item.name.value + '</td><td>' + item.title.value + '</td><td>' + item.format.value + '</td><td>' + item.issued.value + '</td><td>' + item.langlabel.value + '</td></tr>');
+				$('#searchresults').append('<tr class="resultrow"><td>' + c + '</td><td>' + item.name.value + '</td><td>' + item.title.value + '</td><td>' + item.formatlabel.value + '</td><td>' + item.issued.value + '</td><td>' + item.langlabel.value + '</td></tr>');
 				c = c + 1;
 			});
 			$('#searchresults').show();
