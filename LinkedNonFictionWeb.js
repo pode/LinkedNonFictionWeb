@@ -141,25 +141,24 @@ function showResults(uri, id) {
 				var search_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
 	search_sparql = search_sparql + 'PREFIX dct: <http://purl.org/dc/terms/>  ';
 	search_sparql = search_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>  ';
-	search_sparql = search_sparql + 'SELECT DISTINCT ?record ?name ?title ?formatlabel ?issued ?langlabel WHERE {  ';
+	search_sparql = search_sparql + 'SELECT DISTINCT ?record ?responsibility ?title ?formatlabel ?issued ?langlabel WHERE {  ';
 	search_sparql = search_sparql + '?record dct:source pode:dfb_fagposter ;  ';
 	search_sparql = search_sparql + 'pode:ddkThird <http://www.bibpode.no/instance/DDK_' + class + '> . ';
 	search_sparql = search_sparql + 'OPTIONAL { ?record dct:title ?title . } ';
+	search_sparql = search_sparql + 'OPTIONAL { ?record pode:responsibility ?responsibility . } ';
+	search_sparql = search_sparql + 'OPTIONAL { ?record dct:issued ?issued . } ';
 	search_sparql = search_sparql + 'OPTIONAL {  ';
 	search_sparql = search_sparql + '  ?record dct:format ?format .  ';
 	search_sparql = search_sparql + '  ?format rdfs:label ?formatlabel .  ';
 	search_sparql = search_sparql + '} ';
-	search_sparql = search_sparql + 'OPTIONAL { ?record dct:issued ?issued . } ';
 	search_sparql = search_sparql + 'OPTIONAL {  ';
 	search_sparql = search_sparql + '  ?record dct:language ?language . ';
 	search_sparql = search_sparql + '  ?language rdfs:label ?langlabel .  ';
 	search_sparql = search_sparql + '} ';
-	search_sparql = search_sparql + 'OPTIONAL {  ';
-	search_sparql = search_sparql + '  ?record dct:creator ?creator .  ';
-	search_sparql = search_sparql + '  ?creator foaf:name ?name .  ';
-	search_sparql = search_sparql + '} ';
 	search_sparql = search_sparql + 'FILTER langMatches( datatype(?langlabel), "xsd:stringno" )  ';
-	search_sparql = search_sparql + '} ORDER BY DESC(?issued) ?record LIMIT 25  ';
+	search_sparql = search_sparql + '} GROUP BY ?record ORDER BY DESC(?issued) ?record LIMIT 25  ';
+	// NOTE: Not quite sure what GROUP BY does here... Seems like records with multiple languages are only returned once
+	// when "GROUP BY ?record" is included? Could it be used for names too? 
 	
 	var search_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(search_sparql) + '&output=json&jsonp=?';
 	var params = { 'output': 'json' };
@@ -173,10 +172,10 @@ function showResults(uri, id) {
 			var c = 1;
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
-				$('#searchresults').append('<tr class="resultrow" id="resultrow' + i  + '"></tr>');
+				$('#searchresults').append('<tr class="resultrow" id="resultrow' + i  + '" title="' + item.record.value + '"></tr>');
 				$('#resultrow' + i).append('<td>' + c + '</td>');
-				if (item.name) {
-					$('#resultrow' + i).append('<td>' + item.name.value + '</td>');
+				if (item.responsibility) {
+					$('#resultrow' + i).append('<td>' + item.responsibility.value + '</td>');
 				} else {
 					$('#resultrow' + i).append('<td></td>');
 				} 
