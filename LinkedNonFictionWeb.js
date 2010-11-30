@@ -28,6 +28,8 @@ function showTopConcepts() {
 	$('.concepts').empty();
 	// Clear search results
 	$('.resultrow').remove();
+	// Clear heading
+	$('#deweyheading').hide();
 	// Hide results table
 	$('#searchresults').hide();
 	
@@ -53,7 +55,8 @@ function showTopConcepts() {
 				// Here we filter out the ones that contain a 3 digit dewey number, based on the length of the concept URI
 				if (item.concept.value.length == 42) {
 					var concept = notation2concept(item.notation.value);
-					$('#concepts1').append('<li class="concept1" id="concept' + concept + '" onClick="showNarrower(\'' + item.concept.value + '\', \'concept2\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept.substring(0,1) + '">' + concept.substring(0,1) + '</span></li>');
+					var shortconcept = concept.substring(0,1);
+					$('#concepts1').append('<li class="concept1" id="concept' + shortconcept + '" onClick="showNarrower(\'' + item.concept.value + '\', \'concept2\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + shortconcept + '">' + shortconcept + '</span></li>');
 				}
 			});
 			// Get the counts for the concepts
@@ -85,6 +88,9 @@ function showNarrower(uri, level, id) {
 	// Hide the whole result-table
 	$('#searchresults').hide();
 	
+	// Hide Dewey heading
+	$('#deweyheading').hide();
+	
 	// Highlight the chosen concept
 	$('#concept' + id + ' .label').css('background-color', 'silver');
 	
@@ -107,7 +113,8 @@ function showNarrower(uri, level, id) {
 				var item = json.results.bindings[i];
 				var concept = notation2concept(item.notation.value);
 				if (level == 'concept2') {
-					$('#concepts2').append('<li id="concept' + concept + '" class="concept2" onClick="showNarrower(\'' + item.narrower.value + '\', \'concept3\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept.substring(0,2) + '">' + concept.substring(0,2) + '</span></li>');
+					var shortconcept = concept.substring(0,2);
+					$('#concepts2').append('<li id="concept' + shortconcept + '" class="concept2" onClick="showNarrower(\'' + item.narrower.value + '\', \'concept3\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + shortconcept + '">' + shortconcept + '</span></li>');
 				} else {
 					$('#concepts3').append('<li id="concept' + concept + '" class="concept3" onClick="showResults(\'' + item.narrower.value + '\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept + '">' + concept + '</span></li>');
 				}
@@ -127,6 +134,9 @@ function showResults(uri, id) {
 	$('#concepts3 .label').css('background-color', 'white');
 	// Highlight the chosen concept
 	$('#concept' + id + ' .label').css('background-color', 'silver');
+	
+	// Show the chosen Dewey as a heading
+	$('#deweyheading').empty().append($('#concept' + id + ' .label').text()).show();
 	
 	// Make sure no results are displayed
 	$('.resultrow').remove();
