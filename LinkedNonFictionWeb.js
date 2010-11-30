@@ -86,7 +86,7 @@ function showNarrower(uri, level, id) {
 	$('#searchresults').hide();
 	
 	// Highlight the chosen concept
-	$('#' + id + ' .label').css('background-color', 'silver');
+	$('#concept' + id + ' .label').css('background-color', 'silver');
 	
 	// Show "narrower concepts" as seen from the given URI
 			 var top_sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n';
@@ -126,7 +126,7 @@ function showResults(uri, id) {
 	// Un-highlight previous concept
 	$('#concepts3 .label').css('background-color', 'white');
 	// Highlight the chosen concept
-	$('#' + id + ' .label').css('background-color', 'silver');
+	$('#concept' + id + ' .label').css('background-color', 'silver');
 	
 	// Make sure no results are displayed
 	$('.resultrow').remove();
