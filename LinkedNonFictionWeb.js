@@ -1,5 +1,23 @@
+var dialog = '';
+
 $(document).ready(function() {
-  populateLanguageChooser(); 
+  
+	// Make things happen by populating the language dropdown
+	populateLanguageChooser(); 
+  
+	// Initialize the dialog that will hold the detailed view
+	dialog = $('<div></div>')
+		.dialog({
+			autoOpen: false,
+			title: 'Postvisning', 
+			minWidth: 800, 
+			modal: true, 
+			buttons: [{
+        		text: "Lukk",
+        		click: function() { $(this).dialog("close"); }
+    		}]
+		});
+
 });
 
 function populateLanguageChooser() {
@@ -182,7 +200,7 @@ function showResults(uri, id) {
 			var c = 1;
 			$.each(json.results.bindings, function(i, n) {
 				var item = json.results.bindings[i];
-				$('#searchresults').append('<tr class="resultrow" id="resultrow' + i  + '" title="' + item.record.value + '"></tr>');
+				$('#searchresults').append('<tr  onClick="show_details(\'' + item.record.value + '\');" class="resultrow" id="resultrow' + i  + '" title="' + item.record.value + '"></tr>');
 				$('#resultrow' + i).append('<td>' + c + '</td>');
 				if (item.responsibility) {
 					$('#resultrow' + i).append('<td>' + item.responsibility.value + '</td>');
@@ -199,12 +217,12 @@ function showResults(uri, id) {
 				}else {
 					$('#resultrow' + i).append('<td></td>');
 				}
-				if (item.issued.value) {
+				if (item.issued) {
 					$('#resultrow' + i).append('<td>' + item.issued.value + '</td>');
 				}else {
 					$('#resultrow' + i).append('<td></td>');
 				}
-				if (item.langlabel.value) {
+				if (item.langlabel) {
 					$('#resultrow' + i).append('<td>' + item.langlabel.value + '</td>');
 				}else {
 					$('#resultrow' + i).append('<td></td>');
@@ -271,5 +289,73 @@ function get_counts() {
 		
     });
 
+}
+
+function show_details(c) {
+	
+	// Get the data
+			    var detail_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
+	detail_sparql = detail_sparql + 'PREFIX bibo: <http://purl.org/ontology/bibo/> ';
+	detail_sparql = detail_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
+	detail_sparql = detail_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/> ';
+	detail_sparql = detail_sparql + 'SELECT DISTINCT * WHERE { ';
+	detail_sparql = detail_sparql + '<' + c + '> dct:title ?title . ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> bibo:isbn ?isbn . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> bibo:isbn13 ?isbn13 . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> pode:location ?location . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> pode:responsibility ?responsibility . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:issued ?issued . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:description ?description . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> pode:physicalDescription ?physicalDescription . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:publisher ?publisher . ?publisher foaf:name ?publishername . } ';
+	detail_sparql = detail_sparql + '} ';
+
+	var detail_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(detail_sparql) + '&output=json&jsonp=?';
+	var params = { 'output': 'json' };
+	var html = '';
+		
+	$.getJSON(detail_url, params, function(json, status) {
+		if (json.results.bindings[0]){
+			var item = json.results.bindings[0];
+			// Build the detail display
+			html = '<h2>' + item.title.value + '</h2>';
+			html = html + '<table>';
+			// html = html + '<tr><td>Forfatter</td><td>' + item..value + '</td></tr>';
+			if (item.responsibility) {
+				html = html + '<tr><td valign="top">Ansvar</td><td>' + item.responsibility.value + '</td></tr>';
+			}
+			// html = html + '<tr><td>Medvirkende</td><td>' + item..value + '</td></tr>';
+			// html = html + '<tr><td>Språk</td><td>' + item..value + '</td></tr>';
+			html = html + '<tr><td>Utgitt</td><td>';
+			if (item.publishername) {
+				html = html + ': ' + item.publishername.value; 
+			}
+			if (item.issued) {
+				html = html + ', ' + item.issued.value; 
+			}
+			if (item.physicalDescription) {
+				html = html + '. - ' + item.physicalDescription.value; 
+			}
+			html = html + '</td></tr>';
+			// html = html + '<tr><td>Emner</td><td>' + item..value + '</td></tr>';
+			if (item.isbn) {
+				html = html + '<tr><td>ISBN</td><td>' + item.isbn.value + '</td></tr>';
+			}
+			if (item.isbn13) {
+				html = html + '<tr><td>ISBN13</td><td>' + item.isbn13.value + '</td></tr>';
+			}
+			if (item.location) {
+				html = html + '<tr><td>Hylleplass</td><td>' + item.location.value + '</td></tr>';
+			}
+			html = html + '</table>';
+			if (item.description) {
+				html = html + '<h3>Beskrivelse</h3><p>' + item.description.value + '</p>';
+			}
+			// Dsiplay the data
+			dialog.html(html).dialog('open');
+		} else {
+			alert('Something went wrong...');
+		}
+	});
 	
 }
