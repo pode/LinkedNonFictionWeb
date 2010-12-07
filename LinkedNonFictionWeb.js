@@ -184,7 +184,7 @@ function showResults(uri, id) {
 	search_sparql = search_sparql + '  ?language rdfs:label ?langlabel .  ';
 	search_sparql = search_sparql + '} ';
 	search_sparql = search_sparql + 'FILTER langMatches( datatype(?langlabel), "xsd:stringno" )  ';
-	search_sparql = search_sparql + '} GROUP BY ?record ORDER BY DESC(?issued) ?record LIMIT 25  ';
+	search_sparql = search_sparql + '} GROUP BY ?record ORDER BY DESC(?issued) ?record  ';
 	// NOTE: Not quite sure what GROUP BY does here... Seems like records with multiple languages are only returned once
 	// when "GROUP BY ?record" is included? Could it be used for names too? 
 	
