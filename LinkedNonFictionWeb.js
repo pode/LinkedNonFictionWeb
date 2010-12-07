@@ -202,16 +202,16 @@ function showResults(uri, id) {
 				var item = json.results.bindings[i];
 				$('#searchresults').append('<tr  onClick="show_details(\'' + item.record.value + '\');" class="resultrow" id="resultrow' + i  + '" title="' + item.record.value + '"></tr>');
 				$('#resultrow' + i).append('<td>' + c + '</td>');
-				if (item.responsibility) {
-					$('#resultrow' + i).append('<td>' + item.responsibility.value + '</td>');
-				} else {
-					$('#resultrow' + i).append('<td></td>');
-				} 
 				if (item.title) {
 					$('#resultrow' + i).append('<td>' + item.title.value + '</td>');
 				} else {
 					$('#resultrow' + i).append('<td></td>');
 				}
+				if (item.responsibility) {
+					$('#resultrow' + i).append('<td>' + item.responsibility.value + '</td>');
+				} else {
+					$('#resultrow' + i).append('<td></td>');
+				} 
 				if (item.formatlabel) {
 					$('#resultrow' + i).append('<td>' + item.formatlabel.value + '</td>');
 				}else {
@@ -298,6 +298,7 @@ function show_details(c) {
 	detail_sparql = detail_sparql + 'PREFIX bibo: <http://purl.org/ontology/bibo/> ';
 	detail_sparql = detail_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
 	detail_sparql = detail_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/> ';
+	detail_sparql = detail_sparql + 'PREFIX geo: <http://www.geonames.org/ontology#> ';
 	detail_sparql = detail_sparql + 'SELECT DISTINCT * WHERE { ';
 	detail_sparql = detail_sparql + '<' + c + '> dct:title ?title . ';
 	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> bibo:isbn ?isbn . } ';
@@ -308,6 +309,9 @@ function show_details(c) {
 	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:description ?description . } ';
 	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> pode:physicalDescription ?physicalDescription . } ';
 	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:publisher ?publisher . ?publisher foaf:name ?publishername . } ';
+	// Multiple values
+	// Cf: DESCRIBE <http://www.bibpode.no/instance/Oslo>
+	// detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> pode:publicationPlace ?publicationPlace . ?publicationPlace geo:name ?publicationPlaceName . } ';
 	detail_sparql = detail_sparql + '} ';
 
 	var detail_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(detail_sparql) + '&output=json&jsonp=?';
@@ -327,8 +331,15 @@ function show_details(c) {
 			// html = html + '<tr><td>Medvirkende</td><td>' + item..value + '</td></tr>';
 			// html = html + '<tr><td>Språk</td><td>' + item..value + '</td></tr>';
 			html = html + '<tr><td>Utgitt</td><td>';
+			if (item.publicationPlaceName) {
+				html = html + '' + item.publicationPlaceName.value; 
+			} else {
+				html = html + '[S.l.]';	
+			}
 			if (item.publishername) {
-				html = html + ': ' + item.publishername.value; 
+				html = html + ' : ' + item.publishername.value; 
+			} else {
+				html = html + '[S.n.]';	
 			}
 			if (item.issued) {
 				html = html + ', ' + item.issued.value; 
