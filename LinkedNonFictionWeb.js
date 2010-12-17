@@ -323,6 +323,10 @@ function show_details(c) {
 			var item = json.results.bindings[0];
 			// Build the detail display
 			html = '<h2>' + item.title.value + '</h2>';
+			// Insert a cover, if we have an ISBN
+			if (item.isbn) {
+				html = html + '<div id="cover"><img src="image.php?isbn=' + item.isbn.value + '" title="Cover" alt="Cover" id="coverimage" /></div>';
+			}			
 			html = html + '<table>';
 			// html = html + '<tr><td>Forfatter</td><td>' + item..value + '</td></tr>';
 			if (item.responsibility) {

@@ -25,3 +25,8 @@ ul {
 #deweyheading {
   text-align: center;	
 }
+
+#cover {
+  float: right;
+  clear: both;	
+}
