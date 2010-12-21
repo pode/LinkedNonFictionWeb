@@ -88,15 +88,17 @@ function showTopConcepts() {
 
 function showNarrower(uri, level, id) {
 	
+	var elem_id = id;
 	if (level == 'concept2') {
 		// Clear the list of concepts
 		$('#concepts2').empty();
 		// Remove background colour
 		$('.label').css('background-color', 'white');
-	} 
-	if (level == 'concept3') {
+		elem_id = elem_id.substring(0,1);
+	} else if (level == 'concept3') {
 		// Remove background colour
 		$('#concepts2 .label').css('background-color', 'white');
+		elem_id = elem_id.substring(0,2);
 	}
 	$('#concepts3').empty();
 	
@@ -110,7 +112,8 @@ function showNarrower(uri, level, id) {
 	$('#deweyheading').hide();
 	
 	// Highlight the chosen concept
-	$('#concept' + id + ' .label').css('background-color', 'silver');
+	alert('#concept' + elem_id + ' .label');
+	$('#concept' + elem_id + ' .label').css('background-color', 'silver');
 	
 	// Show "narrower concepts" as seen from the given URI
 			 var top_sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n';
