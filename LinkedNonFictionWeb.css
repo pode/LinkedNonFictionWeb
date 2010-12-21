@@ -10,6 +10,14 @@ ul {
   cursor: pointer;	
 }
 
+.label:hover {
+  background-color: lightgrey;	
+}
+
+.chosenconcept {
+  background-color: silver;
+}
+
 .notation {
   color: silver;	
 }

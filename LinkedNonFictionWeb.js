@@ -93,11 +93,11 @@ function showNarrower(uri, level, id) {
 		// Clear the list of concepts
 		$('#concepts2').empty();
 		// Remove background colour
-		$('.label').css('background-color', 'white');
+		$('.label').removeClass('chosenconcept');
 		elem_id = elem_id.substring(0,1);
 	} else if (level == 'concept3') {
 		// Remove background colour
-		$('#concepts2 .label').css('background-color', 'white');
+		$('#concepts2 .label').removeClass('chosenconcept');
 		elem_id = elem_id.substring(0,2);
 	}
 	$('#concepts3').empty();
@@ -112,8 +112,7 @@ function showNarrower(uri, level, id) {
 	$('#deweyheading').hide();
 	
 	// Highlight the chosen concept
-	alert('#concept' + elem_id + ' .label');
-	$('#concept' + elem_id + ' .label').css('background-color', 'silver');
+	$('#concept' + elem_id + ' .label').addClass('chosenconcept');
 	
 	// Show "narrower concepts" as seen from the given URI
 			 var top_sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \n';
@@ -152,9 +151,9 @@ function showNarrower(uri, level, id) {
 function showResults(uri, id) {
 
 	// Un-highlight previous concept
-	$('#concepts3 .label').css('background-color', 'white');
+	$('#concepts3 .label').removeClass('chosenconcept');
 	// Highlight the chosen concept
-	$('#concept' + id + ' .label').css('background-color', 'silver');
+	$('#concept' + id + ' .label').addClass('chosenconcept');
 	
 	// Show the chosen Dewey as a heading
 	$('#deweyheading').empty().append($('#concept' + id + ' .label').text()).show();
