@@ -294,6 +294,7 @@ function get_counts() {
 function show_details(c) {
 	
 	// Get the data
+	/* First attempt
 			    var detail_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
 	detail_sparql = detail_sparql + 'PREFIX bibo: <http://purl.org/ontology/bibo/> ';
 	detail_sparql = detail_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
@@ -313,59 +314,146 @@ function show_details(c) {
 	// Cf: DESCRIBE <http://www.bibpode.no/instance/Oslo>
 	// detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> pode:publicationPlace ?publicationPlace . ?publicationPlace geo:name ?publicationPlaceName . } ';
 	detail_sparql = detail_sparql + '} ';
+	*/
+	
+	            var detail_sparql = 'PREFIX bibo: <http://purl.org/ontology/bibo/> ';
+	detail_sparql = detail_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
+	detail_sparql = detail_sparql + 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
+	detail_sparql = detail_sparql + 'DESCRIBE <' + c + '> ?format ?creator ?editor ?publisher ?publicationPlace ?subject ?language WHERE { ';
+	detail_sparql = detail_sparql + '<http://www.deich.folkebibl.no/cgi-bin/websok?tnr_0904969> dct:format ?format . ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:creator ?creator . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> bibo:editor ?editor . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:publisher ?publisher . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> pode:publicationPlace ?publicationPlace . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:subject ?subject . } ';
+	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:language ?language . } ';
+	detail_sparql = detail_sparql + '} ';
 
 	var detail_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(detail_sparql) + '&output=json&jsonp=?';
 	var params = { 'output': 'json' };
 	var html = '';
 		
 	$.getJSON(detail_url, params, function(json, status) {
-		if (json.results.bindings[0]){
-			var item = json.results.bindings[0];
+		if (json){
+			html = '';
 			// Build the detail display
-			html = '<h2>' + item.title.value + '</h2>';
+			if (json[c]['http://purl.org/dc/terms/title']) {
+				html = html + '<h2>'
+				$.each(json[c]['http://purl.org/dc/terms/title'], function(i, n) {
+					if (json[c]['http://purl.org/dc/terms/title'][i].value != " ") {
+						html = html + '<p>' + json[c]['http://purl.org/dc/terms/title'][i].value + '</p>';
+					}
+				});
+				html = html + '</h2>'
+			}
+			if (json[c]['http://purl.org/dc/terms/title'][0].value != ' ') {
+				html = '<h2>' + json[c]['http://purl.org/dc/terms/title'][0].value + '</h2>';
+			} else if (json[c]['http://purl.org/dc/terms/title'][1].value) {
+				html = '<h2>' + json[c]['http://purl.org/dc/terms/title'][1].value + '</h2>';
+			}
+			if (json[c]['http://www.bibpode.no/vocabulary#subtitle']) {
+				html = html + '<p class="subtitle">Undertittel: ' + json[c]['http://www.bibpode.no/vocabulary#subtitle'][0].value + '</p>';
+			}
 			// Insert a cover, if we have an ISBN
-			if (item.isbn) {
-				html = html + '<div id="cover"><img src="image.php?isbn=' + item.isbn.value + '" title="Cover" alt="Cover" id="coverimage" /></div>';
-			}			
+			if (json[c]['http://purl.org/ontology/bibo/isbn']) {
+				html = html + '<div id="cover"><img src="image.php?isbn=' + json[c]['http://purl.org/ontology/bibo/isbn'][0].value + '" title="Cover" alt="Cover" id="coverimage" /></div>';
+			} else if (json[c]['http://purl.org/ontology/bibo/isbn13']) {
+				html = html + '<div id="cover"><img src="image.php?isbn=' + json[c]['http://purl.org/ontology/bibo/isbn13'][0].value + '" title="Cover" alt="Cover" id="coverimage" /></div>';
+			}
 			html = html + '<table>';
-			// html = html + '<tr><td>Forfatter</td><td>' + item..value + '</td></tr>';
-			if (item.responsibility) {
-				html = html + '<tr><td valign="top">Ansvar</td><td>' + item.responsibility.value + '</td></tr>';
+			// Creators
+			if (json[c]['http://purl.org/dc/terms/creator']) {
+				html = html + '<tr><td>Forfatter(e):</td><td>';
+				$.each(json[c]['http://purl.org/dc/terms/creator'], function(i, n) {
+					var uri_from_record = json[c]['http://purl.org/dc/terms/creator'][i].value;
+					html = html + json[uri_from_record]['http://xmlns.com/foaf/0.1/name'][0].value + '; ';
+				});
+				html = html + '</td></tr>';
 			}
-			// html = html + '<tr><td>Medvirkende</td><td>' + item..value + '</td></tr>';
-			// html = html + '<tr><td>Språk</td><td>' + item..value + '</td></tr>';
-			html = html + '<tr><td>Utgitt</td><td>';
-			if (item.publicationPlaceName) {
-				html = html + '' + item.publicationPlaceName.value; 
-			} else {
-				html = html + '[S.l.]';	
+			// Editors
+			if (json[c]['http://purl.org/ontology/bibo/editor']) {
+				html = html + '<tr><td>Redaktør(er):</td><td>';
+				$.each(json[c]['http://purl.org/ontology/bibo/editor'], function(i, n) {
+					var uri_from_record = json[c]['http://purl.org/ontology/bibo/editor'][i].value;
+					html = html + json[uri_from_record]['http://xmlns.com/foaf/0.1/name'][0].value + '; ';
+				});
+				html = html + '</td></tr>';
 			}
-			if (item.publishername) {
-				html = html + ' : ' + item.publishername.value; 
-			} else {
-				html = html + '[S.n.]';	
+			// "Responsibility"
+			// if (json[c]['http://www.bibpode.no/vocabulary#responsibility']) {
+			// 	html = html + '<tr><td valign="top">Ansvar:</td><td>' + json[c]['http://www.bibpode.no/vocabulary#responsibility'][0].value + '</td></tr>';
+			// }
+			// Language
+			if (json[c]['http://purl.org/dc/terms/language']) {
+				html = html + '<tr><td>Språk:</td><td>';
+				$.each(json[c]['http://purl.org/dc/terms/language'], function(i, n) {
+					var uri_from_record = json[c]['http://purl.org/dc/terms/language'][i].value;
+					// Loop through all the labels for the language, looking for Norwegian bokmål
+					$.each(json[uri_from_record]['http://www.w3.org/2000/01/rdf-schema#label'], function(i, n) {
+						if (json[uri_from_record]['http://www.w3.org/2000/01/rdf-schema#label'][i].lang == 'nb') {
+							html = html + json[uri_from_record]['http://www.w3.org/2000/01/rdf-schema#label'][i].value + '; ';
+						}
+					});
+				});
+				html = html + '</td></tr>';
 			}
-			if (item.issued) {
-				html = html + ', ' + item.issued.value; 
+			// Publication place
+			if (json[c]['http://www.bibpode.no/vocabulary#publicationPlace']) {
+				html = html + '<tr><td>Publiseringssted:</td><td>';
+				var uri_from_record = json[c]['http://www.bibpode.no/vocabulary#publicationPlace'][0].value;
+				html = html + json[uri_from_record]['http://www.geonames.org/ontology#name'][0].value;
+				html = html + '</td></tr>';
 			}
-			if (item.physicalDescription) {
-				html = html + '. - ' + item.physicalDescription.value; 
+			// Publisher
+			if (json[c]['http://purl.org/dc/terms/publisher']) {
+				html = html + '<tr><td>Utgiver:</td><td>';
+				var uri_from_record = json[c]['http://purl.org/dc/terms/publisher'][0].value;
+				html = html + json[uri_from_record]['http://xmlns.com/foaf/0.1/name'][0].value;
+				html = html + '</td></tr>';
 			}
-			html = html + '</td></tr>';
-			// html = html + '<tr><td>Emner</td><td>' + item..value + '</td></tr>';
-			if (item.isbn) {
-				html = html + '<tr><td>ISBN</td><td>' + item.isbn.value + '</td></tr>';
+			// Issued (year)
+			if (json[c]['http://purl.org/dc/terms/issued']) {
+				html = html + '<tr><td>Utgivelsesår: </td><td>' + json[c]['http://purl.org/dc/terms/issued'][0].value + '</td></tr>';
 			}
-			if (item.isbn13) {
-				html = html + '<tr><td>ISBN13</td><td>' + item.isbn13.value + '</td></tr>';
+			// Physical description
+			if (json[c]['http://www.bibpode.no/vocabulary#physicalDescription']) {
+				html = html + '<tr><td>Fysisk beskrivelse:</td><td>';
+				$.each(json[c]['http://www.bibpode.no/vocabulary#physicalDescription'], function(i, n) {
+					html = html + json[c]['http://www.bibpode.no/vocabulary#physicalDescription'][i].value + '; ';
+				});
+				html = html + '</td></tr>';
 			}
-			if (item.location) {
-				html = html + '<tr><td>Hylleplass</td><td>' + item.location.value + '</td></tr>';
+			// Subjects
+			if (json[c]['http://purl.org/dc/terms/subject']) {
+				html = html + '<tr><td>Emne(r):</td><td>';
+				$.each(json[c]['http://purl.org/dc/terms/subject'], function(i, n) {
+					var uri_from_record = json[c]['http://purl.org/dc/terms/subject'][i].value;
+					html = html + json[uri_from_record]['http://www.w3.org/2004/02/skos/core#prefLabel'][0].value + '; ';
+				});
+				html = html + '</td></tr>';
+			}
+			// ISBN
+			if (json[c]['http://purl.org/ontology/bibo/isbn']) {
+				html = html + '<tr><td>ISBN: </td><td>' + json[c]['http://purl.org/ontology/bibo/isbn'][0].value + '</td></tr>';
+			}
+			// ISBN13
+			if (json[c]['http://purl.org/ontology/bibo/isbn13']) {
+				html = html + '<tr><td>ISBN13:</td><td>' + json[c]['http://purl.org/ontology/bibo/isbn13'][0].value + '</td></tr>';
+			}
+			// Location
+			if (json[c]['http://www.bibpode.no/vocabulary#location']) {
+				html = html + '<tr><td>Hylleplass:</td><td>' + json[c]['http://www.bibpode.no/vocabulary#location'][0].value + '</td></tr>';
 			}
 			html = html + '</table>';
-			if (item.description) {
-				html = html + '<h3>Beskrivelse</h3><p>' + item.description.value + '</p>';
+			// Description
+			if (json[c]['http://purl.org/dc/terms/description']) {
+				html = html + '<h3>Beskrivelse</h3>'
+				$.each(json[c]['http://purl.org/dc/terms/description'], function(i, n) {
+					html = html + '<p>' + json[c]['http://purl.org/dc/terms/description'][i].value + '</p>';
+				});
 			}
+			// URI
+			html = html + '<p>URI: ' + json[c]['http://purl.org/ontology/bibo/uri'][0].value + '</p>';
 			// Dsiplay the data
 			dialog.html(html).dialog('open');
 		} else {
