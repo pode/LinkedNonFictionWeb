@@ -338,20 +338,26 @@ function show_details(c) {
 	$.getJSON(detail_url, params, function(json, status) {
 		if (json){
 			html = '';
+			// Show the Dewey breadcrumbs 
+			html = html + '<p>';
+			var ccount = 0;
+			$('.chosenconcept').each(function(index) {
+				html = html + $(this).text();
+				if (ccount < 2) {
+					html = html + " > ";
+				}
+				ccount = ccount + 1;
+			});
+ 			html = html + '</p>';
 			// Build the detail display
 			if (json[c]['http://purl.org/dc/terms/title']) {
-				html = html + '<h2>'
+				html = html + '<h2>';
 				$.each(json[c]['http://purl.org/dc/terms/title'], function(i, n) {
 					if (json[c]['http://purl.org/dc/terms/title'][i].value != " ") {
-						html = html + '<p>' + json[c]['http://purl.org/dc/terms/title'][i].value + '</p>';
+						html = html + json[c]['http://purl.org/dc/terms/title'][i].value + ' ';
 					}
 				});
-				html = html + '</h2>'
-			}
-			if (json[c]['http://purl.org/dc/terms/title'][0].value != ' ') {
-				html = '<h2>' + json[c]['http://purl.org/dc/terms/title'][0].value + '</h2>';
-			} else if (json[c]['http://purl.org/dc/terms/title'][1].value) {
-				html = '<h2>' + json[c]['http://purl.org/dc/terms/title'][1].value + '</h2>';
+				html = html + '</h2>';
 			}
 			if (json[c]['http://www.bibpode.no/vocabulary#subtitle']) {
 				html = html + '<p class="subtitle">Undertittel: ' + json[c]['http://www.bibpode.no/vocabulary#subtitle'][0].value + '</p>';
