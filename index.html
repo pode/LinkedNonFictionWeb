@@ -15,10 +15,25 @@
 
 <p id="initial_progress"><img src="ajax-loader.gif" title="I'm working..." /></p>
 
+<table>
+<tr>
+<td>Dewey-språk:</td>
+<td>
 <form id="lang_form" style="display: none;">
 <select name="lang" id="lang_select" onChange="showTopConcepts()">
 </select>
 </form>
+</td>
+<td>Dokumentspråk:</td>
+<td>
+<form id="doc_lang_form" style="display: none;">
+<select name="doc_lang" id="doc_lang_select" onChange="update_counts()">
+<option value="">Velg språk...</option>
+</select>
+</form>
+</td>
+</tr>
+</table>
 
 <table>
 <tr>
@@ -48,11 +63,6 @@
 </table>
 
 <p id="debug"></p>
-
-<div>
-<span onClick="show_details('http://www.deich.folkebibl.no/cgi-bin/websok?tnr_0904969');">Detalj-test</span> -
-<span onClick="show_details('http://www.deich.folkebibl.no/cgi-bin/websok?tnr_0941235');">Forsidebilde</span>
-</div>
 
 </body>
 </html>

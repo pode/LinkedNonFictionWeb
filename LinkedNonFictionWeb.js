@@ -3,7 +3,7 @@ var dialog = '';
 $(document).ready(function() {
   
 	// Make things happen by populating the language dropdown
-	populateLanguageChooser(); 
+	populateLanguageChoosers(); 
   
 	// Initialize the dialog that will hold the detailed view
 	dialog = $('<div></div>')
@@ -20,10 +20,11 @@ $(document).ready(function() {
 
 });
 
-function populateLanguageChooser() {
+function populateLanguageChoosers() {
 
 	var lang_url = 'proxy.php?lang2lexvo=1';
 
+	// Dewey languages
 	$.getJSON(lang_url, function(json, status) {
 		$.each(json, function(i) {
 			var item = json[i];
@@ -36,6 +37,32 @@ function populateLanguageChooser() {
 		// Having showTopConcepts() here triggers the display of concepts after the language drop-down is displayed
 		// Whichever language is at the top of the drop-down will be displayed
 		showTopConcepts();
+	});
+	
+	// Document languages
+	             var doclang_sparql = 'PREFIX dct: <http://purl.org/dc/terms/> ';
+	doclang_sparql = doclang_sparql + 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
+	doclang_sparql = doclang_sparql + 'SELECT DISTINCT ?language ?langLabel WHERE { ';
+	doclang_sparql = doclang_sparql + '?record dct:source pode:dfb_fagposter . ';
+	doclang_sparql = doclang_sparql + '?record dct:language ?language . ';
+	doclang_sparql = doclang_sparql + '?language rdfs:label ?langLabel . ';
+	doclang_sparql = doclang_sparql + 'FILTER langMatches( lang(?langLabel), "nb" ) ';
+	doclang_sparql = doclang_sparql + '} ORDER BY ?langLabel ';
+	
+	var doclang_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(doclang_sparql) + '&output=json&jsonp=?';
+	var params = { 'output': 'json' };
+	
+	$.getJSON(doclang_url, params, function(json, status) {
+		if (json.results.bindings){
+			$.each(json.results.bindings, function(i, n) {
+				var item = json.results.bindings[i];
+				$('#doc_lang_select').append('<option value="' + item.language.value + '">' + item.langLabel.value + '</option>');
+			});
+			// Show the language drop-down
+			$('#doc_lang_form').show();
+		} else {
+			alert('Something went wrong...');
+		}
 	});
 	
 }
@@ -136,7 +163,7 @@ function showNarrower(uri, level, id) {
 					var shortconcept = concept.substring(0,2);
 					$('#concepts2').append('<li id="concept' + shortconcept + '" class="concept2" onClick="showNarrower(\'' + item.narrower.value + '\', \'concept3\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + shortconcept + '">' + shortconcept + '</span></li>');
 				} else {
-					$('#concepts3').append('<li id="concept' + concept + '" class="concept3" onClick="showResults(\'' + item.narrower.value + '\', \'' + concept + '\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept + '">' + concept + '</span></li>');
+					$('#concepts3').append('<li id="concept' + concept + '" class="concept3" onClick="showResults(\'' + concept + '\', \'1\');"><span class="notation">' + item.notation.value + '</span> <span class="label">' + item.label.value + '</span> <span class="waitingforcount" id="count' + concept + '">' + concept + '</span></li>');
 				}
 			});
 			// Get the counts for concepts
@@ -148,24 +175,22 @@ function showNarrower(uri, level, id) {
 	
 }
 
-function showResults(uri, id) {
+/* Arguments: 
+id: the Dewey notation, e.g. 059
+*/
+function showResults(id, cliked) {
 
-	// Un-highlight previous concept
-	$('#concepts3 .label').removeClass('chosenconcept');
-	// Highlight the chosen concept
-	$('#concept' + id + ' .label').addClass('chosenconcept');
-	
-	// Show the chosen Dewey as a heading
-	$('#deweyheading').empty().append($('#concept' + id + ' .label').text()).show();
+	if (cliked == 1) {
+		// Un-highlight previous concept
+		$('#concepts3 .label').removeClass('chosenconcept');
+		// Highlight the chosen concept
+		$('#concept' + id + ' .label').addClass('chosenconcept');
+		// Show the chosen Dewey as a heading
+		$('#deweyheading').empty().append($('#concept' + id + ' .label').text()).show();
+	}
 	
 	// Make sure no results are displayed
 	$('.resultrow').remove();
-	
-	// Debug
-	// $('#debug').empty().append('DEBUG Treff for ' + uri);
-	
-	// Turn the uri into something we can use
-	var class = uri.substring(24, 27);
 	
 	// Get results
 				var search_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
@@ -173,7 +198,11 @@ function showResults(uri, id) {
 	search_sparql = search_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>  ';
 	search_sparql = search_sparql + 'SELECT DISTINCT ?record ?responsibility ?title ?formatlabel ?issued ?langlabel WHERE {  ';
 	search_sparql = search_sparql + '?record dct:source pode:dfb_fagposter ;  ';
-	search_sparql = search_sparql + 'pode:ddkThird <http://www.bibpode.no/instance/DDK_' + class + '> . ';
+	search_sparql = search_sparql + 'pode:ddkThird <http://www.bibpode.no/instance/DDK_' + id + '> . ';
+	// Restrict by language if one is chosen from the document language pulldown menu
+	if ($("#doc_lang_select option:selected").val() != '') {
+		search_sparql = search_sparql + '?record dct:language <' + $("#doc_lang_select option:selected").val() + '> . ';	
+	}
 	search_sparql = search_sparql + 'OPTIONAL { ?record dct:title ?title . } ';
 	search_sparql = search_sparql + 'OPTIONAL { ?record pode:responsibility ?responsibility . } ';
 	search_sparql = search_sparql + 'OPTIONAL { ?record dct:issued ?issued . } ';
@@ -267,8 +296,13 @@ function get_counts() {
 		// Note: COUNT() is part of what ARC calls SPARQL+, not a part of the official SPARQL standard
 		// http://arc.semsol.org/docs/v2/sparql+
 				   var count_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
+		count_sparql = count_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
 		count_sparql = count_sparql + 'SELECT COUNT(?record) AS ?count WHERE { ';
-		count_sparql = count_sparql + '?record pode:ddk' + level + ' <http://www.bibpode.no/instance/DDK_' + c + '> . }';
+		count_sparql = count_sparql + '?record pode:ddk' + level + ' <http://www.bibpode.no/instance/DDK_' + c + '> . ';
+		if ($("#doc_lang_select option:selected").val() != '') {
+			count_sparql = count_sparql + '?record dct:language <' + $("#doc_lang_select option:selected").val() + '> . ';
+		}
+		count_sparql = count_sparql + '} ';
 		
 		var count_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(count_sparql) + '&output=json&jsonp=?';
 		var params = { 'output': 'json' };
@@ -290,6 +324,54 @@ function get_counts() {
 		});
 		
     });
+
+}
+
+function update_counts() {
+	
+	// Empty the containers
+	$('.count').each(function(index) {
+		$(this).empty();
+	});
+	
+	// Fill them with new counts
+	$('.count').each(function(index) {
+    	var notation = $(this).siblings('.notation').text();
+    	var id = $(this).attr('id');
+    	var level = 'Third';
+    	notation = notation2concept(notation);
+    	if ($(this).parent().attr('class') == 'concept1') {
+    		notation = notation.substring(0,1);
+    		level = 'First';
+    	} else if ($(this).parent().attr('class') == 'concept2') {
+    		notation = notation.substring(0,2);
+    		level = 'Second';
+    	} else if ($(this).parent().attr('class') == 'concept3') {
+    		notation = notation.substring(0,3);
+    	}
+   		
+		// Note: COUNT() is part of what ARC calls SPARQL+, not a part of the official SPARQL standard
+		// http://arc.semsol.org/docs/v2/sparql+
+				   var count_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
+		count_sparql = count_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
+		count_sparql = count_sparql + 'SELECT COUNT(?record) AS ?count WHERE { ';
+		count_sparql = count_sparql + '?record pode:ddk' + level + ' <http://www.bibpode.no/instance/DDK_' + notation + '> . ';
+		count_sparql = count_sparql + '?record dct:language <' + $("#doc_lang_select option:selected").val() + '> . } ';
+		
+		var count_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(count_sparql) + '&output=json&jsonp=?';
+		var params = { 'output': 'json' };
+		
+		$.getJSON(count_url, params, function(json, status) {
+			if (json.results.bindings[0].count.value){
+				$('#' + id).text(' (' + json.results.bindings[0].count.value + ')');
+			} else {
+				alert('Something went wrong...');
+			}
+		});
+		
+    });
+    // Update the list of results
+    showResults($('#concepts3 .chosenconcept').siblings('.notation').text(), '0') 
 
 }
 
