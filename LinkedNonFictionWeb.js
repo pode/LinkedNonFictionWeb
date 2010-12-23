@@ -193,6 +193,7 @@ function showResults(id, cliked) {
 	$('.resultrow').remove();
 	
 	// Get results
+	/* First version, using SELECT
 				var search_sparql = 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
 	search_sparql = search_sparql + 'PREFIX dct: <http://purl.org/dc/terms/>  ';
 	search_sparql = search_sparql + 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>  ';
@@ -218,6 +219,22 @@ function showResults(id, cliked) {
 	search_sparql = search_sparql + '} GROUP BY ?record ORDER BY DESC(?issued) ?record ';
 	// NOTE: Not quite sure what GROUP BY does here... Seems like records with multiple languages are only returned once
 	// when "GROUP BY ?record" is included? Could it be used for names too? 
+	*/
+	
+	// Second attempt, using DESCRIBE
+	            var search_sparql = 'PREFIX bibo: <http://purl.org/ontology/bibo/> ';
+	search_sparql = search_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
+	search_sparql = search_sparql + 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
+	search_sparql = search_sparql + 'DESCRIBE ?record ?format ?creator ?language WHERE { ';
+	search_sparql = search_sparql + '?record pode:ddkThird <http://www.bibpode.no/instance/DDK_' + id + '> . ';
+	search_sparql = search_sparql + '?record dct:format ?format . ';
+	search_sparql = search_sparql + 'OPTIONAL { ?record dct:creator ?creator . } ';
+	// search_sparql = search_sparql + 'OPTIONAL { ?record bibo:editor ?editor . } ';
+	// search_sparql = search_sparql + 'OPTIONAL { <' + c + '> dct:publisher ?publisher . } ';
+	// search_sparql = search_sparql + 'OPTIONAL { <' + c + '> pode:publicationPlace ?publicationPlace . } ';
+	// search_sparql = search_sparql + 'OPTIONAL { <' + c + '> dct:subject ?subject . } ';
+	search_sparql = search_sparql + 'OPTIONAL { ?record dct:language ?language . } ';
+	search_sparql = search_sparql + '} ';
 	
 	var search_url = 'http://bibpode.no/rdfstore/endpoint.php?query=' + escape(search_sparql) + '&output=json&jsonp=?';
 	var params = { 'output': 'json' };
@@ -225,19 +242,28 @@ function showResults(id, cliked) {
 	// $('#debug').append('<br /><br />' + search_url);
 
 	$.getJSON(search_url, params, function(json, status) {
-		if (json.results.bindings){
+		if (json){
 			// Make sure the results-table is displayed
 			$('#searchresults').show();
 			var c = 1;
-			$.each(json.results.bindings, function(i, n) {
-				var item = json.results.bindings[i];
-				$('#searchresults').append('<tr  onClick="show_details(\'' + item.record.value + '\');" class="resultrow" id="resultrow' + i  + '" title="' + item.record.value + '"></tr>');
+			$.each(json, function(i, n) {
+				alert(i + n);
+				var item = json[i];
+				$('#searchresults').append('<tr onClick="show_details(\'' + "item.record.value" + '\');" class="resultrow" id="resultrow' + i  + '" title="' + "item.record.value" + '"></tr>');
 				$('#resultrow' + i).append('<td>' + c + '</td>');
-				if (item.title) {
-					$('#resultrow' + i).append('<td>' + item.title.value + '</td>');
+				if (item['http://purl.org/dc/terms/title']) {
+					var html = '<td>';
+					$.each(item['http://purl.org/dc/terms/title'], function(i, n) {
+						if (item['http://purl.org/dc/terms/title'][i].value != " ") {
+							html = html + item['http://purl.org/dc/terms/title'][i].value + ' ';
+						}
+					});
+					html = html + '</td>';
+					$('#resultrow' + i).append(html);
 				} else {
 					$('#resultrow' + i).append('<td></td>');
 				}
+				/*
 				if (item.responsibility) {
 					$('#resultrow' + i).append('<td>' + item.responsibility.value + '</td>');
 				} else {
@@ -258,6 +284,7 @@ function showResults(id, cliked) {
 				}else {
 					$('#resultrow' + i).append('<td></td>');
 				}
+				*/
 				c = c + 1;
 			});
 			$('#searchresults').show();
@@ -404,7 +431,7 @@ function show_details(c) {
 	detail_sparql = detail_sparql + 'PREFIX dct: <http://purl.org/dc/terms/> ';
 	detail_sparql = detail_sparql + 'PREFIX pode: <http://www.bibpode.no/vocabulary#> ';
 	detail_sparql = detail_sparql + 'DESCRIBE <' + c + '> ?format ?creator ?editor ?publisher ?publicationPlace ?subject ?language WHERE { ';
-	detail_sparql = detail_sparql + '<http://www.deich.folkebibl.no/cgi-bin/websok?tnr_0904969> dct:format ?format . ';
+	detail_sparql = detail_sparql + '<' + c + '> dct:format ?format . ';
 	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:creator ?creator . } ';
 	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> bibo:editor ?editor . } ';
 	detail_sparql = detail_sparql + 'OPTIONAL { <' + c + '> dct:publisher ?publisher . } ';
