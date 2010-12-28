@@ -1,5 +1,26 @@
 <?php
 
+/*
+
+Copyright 2010 ABM-utvikling
+
+This file is part of "Podes LinkedNonFictionWeb".
+
+"Podes LinkedNonFictionWeb" is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+"Podes LinkedNonFictionWeb" is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with "Podes LinkedNonFictionWeb". If not, see <http://www.gnu.org/licenses/&gt;.
+
+*/
+
 if (!empty($_GET['lang2lexvo'])) {
 	
 	$sparql = 'PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
