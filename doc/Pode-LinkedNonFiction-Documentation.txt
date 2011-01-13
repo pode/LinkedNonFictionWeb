@@ -67,7 +67,7 @@ person:Leonardo_da_Vinci a foaf:Person ;
 foaf:name “Leonardo da Vinci” .
  
 Nudging language data
-Using language instances from the Lexvo vocabulary turned out to be a little less straightforward than expected. There is, as far as we could see, no such thing as a SPARQL endpoint for Lexvo data. I order to query the data in our web application, we therefore had to import these data into our own triplestore. Furthermore, it turned out that the data weren’t as complete as we had hoped. Several languges lacked a label in Norwegian. This turned out to cause a problem in our web application, since some SPARQL queries failed to provide an answer. We solved this by adding the missing labels to our local version of the Lexvo dataset, using the SPARQL Insert commando.
+Using language instances from the Lexvo vocabulary turned out to be a little less straightforward than expected. There is, as far as we could see, no such thing as a SPARQL endpoint for Lexvo data. I order to query the data in our web application, we therefore had to import these data into our own triplestore. Furthermore, it turned out that the data weren’t as complete as we had hoped. Several languges lacked a label in Norwegian. This turned out to cause a problem in our web application, since some SPARQL queries failed to provide an answer. We solved this by adding the missing labels to our local version of the Lexvo dataset, using the SPARUL Insert commando.
 2. LinkedNonFictionWeb
 LinkedNonFictionWeb is a web-based display of the data created by LinkedNonFiction, mashed up with data from a couple of other sources. 
  
